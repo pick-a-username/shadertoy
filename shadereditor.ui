@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ShaderEditor</class>
+ <widget class="QWidget" name="ShaderEditor">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>785</width>
+    <height>484</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>shader</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="10,3">
+   <item>
+    <widget class="QPlainTextEdit" name="text"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="layout0" stretch="1,1,1,1">
+     <item>
+      <widget class="QWidget" name="channel0" native="true"/>
+     </item>
+     <item>
+      <widget class="QWidget" name="channel1" native="true"/>
+     </item>
+     <item>
+      <widget class="QWidget" name="channel2" native="true"/>
+     </item>
+     <item>
+      <widget class="QWidget" name="channel3" native="true"/>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainForm</class>
+ <widget class="QWidget" name="MainForm">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>854</width>
+    <height>509</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Shadertoy</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="10,1,5">
+     <item>
+      <widget class="GLScene" name="scene"/>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="layout2" stretch="1,10">
+       <item>
+        <widget class="QPushButton" name="compile">
+         <property name="text">
+          <string>&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="texts">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="currentIndex">
+      <number>0</number>
+     </property>
+     <widget class="ShaderEditor" name="image">
+      <attribute name="title">
+       <string>Image</string>
+      </attribute>
+     </widget>
+     <widget class="ShaderEditor" name="buffer_A">
+      <attribute name="title">
+       <string>Buffer A</string>
+      </attribute>
+     </widget>
+     <widget class="ShaderEditor" name="buffer_B">
+      <attribute name="title">
+       <string>Buffer B</string>
+      </attribute>
+     </widget>
+     <widget class="ShaderEditor" name="buffer_C">
+      <attribute name="title">
+       <string>Buffer C</string>
+      </attribute>
+     </widget>
+     <widget class="ShaderEditor" name="buffer_D">
+      <attribute name="title">
+       <string>Buffer D</string>
+      </attribute>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ShaderEditor</class>
+   <extends>QWidget</extends>
+   <header>shadereditor.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>GLScene</class>
+   <extends>QOpenGLWidget</extends>
+   <header>glscene.hpp</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
