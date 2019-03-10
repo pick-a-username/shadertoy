@@ -38,7 +38,6 @@ void RenderWorker::resizeGL(int width, int height)
 {
   m_fboSize.setWidth(width);
   m_fboSize.setHeight(height);
-  qDebug() << QThread::currentThread() << __LINE__ << __PRETTY_FUNCTION__ << m_fboSize;
 }
 
 void RenderWorker::paintGL()

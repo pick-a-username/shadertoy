@@ -3,8 +3,11 @@
 
 #include <QScopedPointer>
 #include <QOpenGLWidget>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLFramebufferObject>
+#include <QTime>
 
 namespace Ui {
   class GLScene;
@@ -25,6 +28,7 @@ signals:
   void resizedGL(int width, int height);
 
 public slots:
+  void setShader(const QString&);
   void channel_A(GLuint, const QSize&);
   void channel_B(GLuint, const QSize&);
   void channel_C(GLuint, const QSize&);
@@ -40,6 +44,9 @@ protected:
 
 private:
   QScopedPointer<Ui::GLScene> ui;
+  QScopedPointer<QOpenGLShaderProgram> m_program;
+  QOpenGLBuffer m_vbo;
+  QTime m_startTime;
 };
 
 #endif // GLSCENE_HPP
