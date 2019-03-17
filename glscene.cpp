@@ -214,23 +214,6 @@ void GLScene::paintGL()
   glUniform1f(m_program->iTime(), m_startTime.msecsTo(QTime::currentTime()) * 1e-3f);
   glUniform4f(m_program->iMouse(), m_mousePosition.x(), m_mousePosition.y(), m_mouseClick.x(), m_mouseClick.y());
   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-  for (;;)
-  {
-    auto err { glGetError() };
-    if (err == GL_NO_ERROR)
-      break;
-    switch (err)
-    {
-    case GL_INVALID_ENUM: qDebug() << "GL_INVALID_ENUM"; break;
-    case GL_INVALID_VALUE: qDebug() << "GL_INVALID_VALUE"; break;
-    case GL_INVALID_OPERATION: qDebug() << "GL_INVALID_OPERATION"; break;
-    case GL_INVALID_FRAMEBUFFER_OPERATION: qDebug() << "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
-    case GL_OUT_OF_MEMORY: qDebug() << "GL_OUT_OF_MEMORY"; break;
-    case GL_STACK_UNDERFLOW: qDebug() << "GL_STACK_UNDERFLOW"; break;
-    case GL_STACK_OVERFLOW: qDebug() << "GL_STACK_OVERFLOW"; break;
-    default: qDebug() << __LINE__ << err;
-    }
-  }
 }
 
 void GLScene::resizeGL(int width, int height)
@@ -250,4 +233,25 @@ void GLScene::mouseMoveEvent(QMouseEvent* event)
 
 void GLScene::mouseReleaseEvent(QMouseEvent* event)
 {
+}
+
+void GLScene::dump_glerror(int line)
+{
+  for (;;)
+  {
+    auto err { glGetError() };
+    if (err == GL_NO_ERROR)
+      return;
+    switch (err)
+    {
+    case GL_INVALID_ENUM: qDebug() << "GL_INVALID_ENUM"; break;
+    case GL_INVALID_VALUE: qDebug() << "GL_INVALID_VALUE"; break;
+    case GL_INVALID_OPERATION: qDebug() << "GL_INVALID_OPERATION"; break;
+    case GL_INVALID_FRAMEBUFFER_OPERATION: qDebug() << "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
+    case GL_OUT_OF_MEMORY: qDebug() << "GL_OUT_OF_MEMORY"; break;
+    case GL_STACK_UNDERFLOW: qDebug() << "GL_STACK_UNDERFLOW"; break;
+    case GL_STACK_OVERFLOW: qDebug() << "GL_STACK_OVERFLOW"; break;
+    default: qDebug() << line << err;
+    }
+  }
 }

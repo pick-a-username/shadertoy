@@ -44,6 +44,9 @@ protected:
   void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
+  void dump_glerror(int line);
+
+private:
   QScopedPointer<Ui::GLScene> ui;
   QScopedPointer<shader> m_program;
   QOpenGLBuffer m_vbo;
