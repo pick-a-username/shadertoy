@@ -31,7 +31,8 @@ SOURCES += \
     channelselector.cpp \
     glscene.cpp \
     renderworker.cpp \
-    abstractchannel.cpp
+    abstractchannel.cpp \
+    shader.cpp
 
 HEADERS += \
     mainform.hpp \
@@ -39,7 +40,8 @@ HEADERS += \
     channelselector.hpp \
     glscene.hpp \
     renderworker.hpp \
-    abstractchannel.hpp
+    abstractchannel.hpp \
+    shader.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

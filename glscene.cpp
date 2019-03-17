@@ -1,5 +1,6 @@
 #include <QThread>
 #include <QDebug>
+#include <QMouseEvent>
 #include "glscene.hpp"
 #include "ui_glscene.h"
 
@@ -21,31 +22,9 @@ GLScene::~GLScene()
 
 void GLScene::setShader(const QString& source)
 {
-  const char* vsrc =
-      "attribute highp vec2 vertex;\n"
-      "void main(void){gl_Position = vec4(vertex, 0.0, 1.0);\n}\n";
-  QString fsrc =
-      "uniform vec3      iResolution;\n"           // viewport resolution (in pixels)
-      "uniform float     iTime;\n"                 // shader playback time (in seconds)
-      //"uniform float     iTimeDelta;\n"            // render time (in seconds)
-      //"uniform int       iFrame;\n"                // shader playback frame
-      //"uniform float     iChannelTime[4];\n"       // channel playback time (in seconds)
-      //"uniform vec3      iChannelResolution[4];\n" // channel resolution (in pixels)
-      //"uniform vec4      iMouse;\n"                // mouse pixel coords. xy: current (if MLB down), zw: click
-      //"uniform samplerXX iChannel0..3;\n"          // input channel. XX = 2D/Cube
-      //"uniform vec4      iDate;\n"                 // (year, month, day, time in seconds)
-      //"uniform float     iSampleRate;\n"           // sound sample rate (i.e., 44100)
-      "\n"
-      + source +
-      "\nvoid main(void){mainImage(gl_FragColor, gl_FragCoord.xy);}\n"
-      ;
-
-  m_program.reset(new QOpenGLShaderProgram);
-  m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vsrc);
-  m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fsrc);
-  m_program->bindAttributeLocation("vertex", 1);
-  m_program->link();
-  qDebug() << __LINE__ << m_program->log();
+  m_program.reset(new shader(context()));
+  m_program->set_source(0, source);
+  m_program->compile();
 }
 
 void GLScene::channel_A(GLuint texId, const QSize& size)
@@ -228,12 +207,30 @@ void GLScene::initializeGL()
 void GLScene::paintGL()
 {
   m_vbo.bind();
-  m_program->bind();
-  m_program->enableAttributeArray(1);
-  m_program->setAttributeBuffer(1, GL_FLOAT, 0, 2, 0);
-  m_program->setUniformValue("iResolution", size().width() * 1.f, size().height() * 1.f, 0.f);
-  m_program->setUniformValue("iTime", m_startTime.msecsTo(QTime::currentTime()) * 1e-3f);
+  glUseProgram(m_program->get());
+  glEnableVertexAttribArray(m_program->vertex());
+  glVertexAttribPointer(m_program->vertex(), 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+  glUniform3f(m_program->iResolution(), size().width(), size().height(), 0.f);
+  glUniform1f(m_program->iTime(), m_startTime.msecsTo(QTime::currentTime()) * 1e-3f);
+  glUniform4f(m_program->iMouse(), m_mousePosition.x(), m_mousePosition.y(), m_mouseClick.x(), m_mouseClick.y());
   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  for (;;)
+  {
+    auto err { glGetError() };
+    if (err == GL_NO_ERROR)
+      break;
+    switch (err)
+    {
+    case GL_INVALID_ENUM: qDebug() << "GL_INVALID_ENUM"; break;
+    case GL_INVALID_VALUE: qDebug() << "GL_INVALID_VALUE"; break;
+    case GL_INVALID_OPERATION: qDebug() << "GL_INVALID_OPERATION"; break;
+    case GL_INVALID_FRAMEBUFFER_OPERATION: qDebug() << "GL_INVALID_FRAMEBUFFER_OPERATION"; break;
+    case GL_OUT_OF_MEMORY: qDebug() << "GL_OUT_OF_MEMORY"; break;
+    case GL_STACK_UNDERFLOW: qDebug() << "GL_STACK_UNDERFLOW"; break;
+    case GL_STACK_OVERFLOW: qDebug() << "GL_STACK_OVERFLOW"; break;
+    default: qDebug() << __LINE__ << err;
+    }
+  }
 }
 
 void GLScene::resizeGL(int width, int height)
@@ -241,14 +238,16 @@ void GLScene::resizeGL(int width, int height)
   emit resizedGL(width, height);
 }
 
-void GLScene::mousePressEvent(QMouseEvent *event)
+void GLScene::mousePressEvent(QMouseEvent* event)
 {
+  m_mouseClick = event->pos();
 }
 
-void GLScene::mouseMoveEvent(QMouseEvent *event)
+void GLScene::mouseMoveEvent(QMouseEvent* event)
 {
+  m_mousePosition = event->pos();
 }
 
-void GLScene::mouseReleaseEvent(QMouseEvent *event)
+void GLScene::mouseReleaseEvent(QMouseEvent* event)
 {
 }
