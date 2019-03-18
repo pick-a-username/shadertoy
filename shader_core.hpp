@@ -1,16 +1,16 @@
 #pragma once
-#define SHADER_HPP
+#define SHADER_CORE_HPP
 
 #include <vector>
 #include <unordered_map>
 #include <memory>
 #include <QOpenGLExtraFunctions>
 
-class shader : public QOpenGLExtraFunctions
+class shader_core : public QOpenGLExtraFunctions
 {
 public:
-  shader(QOpenGLContext *context = nullptr);
-  virtual ~shader();
+  shader_core(QOpenGLContext *context = nullptr);
+  virtual ~shader_core();
   inline void set_source(GLuint id, const std::string& src) { m_sources.emplace(id, src); }
   inline void set_source(GLuint id, const QString& src) { m_sources.emplace(id, src.toStdString()); }
   inline void set_iChannel(GLuint id, GLenum target) { m_iChannel_target.at(id) = target; }

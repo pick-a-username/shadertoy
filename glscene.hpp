@@ -8,7 +8,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLFramebufferObject>
 #include <QTime>
-#include "shader.hpp"
+#include "shader_core.hpp"
 
 namespace Ui {
   class GLScene;
@@ -22,7 +22,7 @@ class GLScene
 
 public:
   explicit GLScene(QWidget *parent = nullptr);
-  ~GLScene();
+  virtual ~GLScene();
 
 signals:
   void initializedGL(QOpenGLContext*);
@@ -48,7 +48,7 @@ private:
 
 private:
   QScopedPointer<Ui::GLScene> ui;
-  QScopedPointer<shader> m_program;
+  QScopedPointer<shader_core> m_program;
   QOpenGLBuffer m_vbo;
   QTime m_startTime;
   QPointF m_mouseClick;

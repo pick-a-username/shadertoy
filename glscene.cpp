@@ -22,7 +22,7 @@ GLScene::~GLScene()
 
 void GLScene::setShader(const QString& source)
 {
-  m_program.reset(new shader(context()));
+  m_program.reset(new shader_core(context()));
   m_program->set_source(0, source);
   m_program->compile();
 }

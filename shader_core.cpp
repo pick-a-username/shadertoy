@@ -1,5 +1,5 @@
 #include <QDebug>
-#include "shader.hpp"
+#include "shader_core.hpp"
 
 inline const char* from_iChannel0(GLenum target)
 {
@@ -74,14 +74,14 @@ inline const char* from_iChannel3(GLenum target)
   }
 }
 
-shader::shader(QOpenGLContext* context) : QOpenGLExtraFunctions(context)
+shader_core::shader_core(QOpenGLContext* context) : QOpenGLExtraFunctions(context)
 {
   initializeOpenGLFunctions();
 }
-shader::~shader()
+shader_core::~shader_core()
 {
 }
-void shader::compile()
+void shader_core::compile()
 {
   //static char common_version[] = "#version 100\n";
   static char common_version[] = "#version 120\n";
@@ -199,7 +199,7 @@ void shader::compile()
   m_iSampleRate_location = glGetUniformLocation(m_program.get(), "iSampleRate");
 }
 
-std::unordered_map<std::string, GLint> shader::uniforms()
+std::unordered_map<std::string, GLint> shader_core::uniforms()
 {
   std::unordered_map<std::string, GLint> r;
   GLint count { 0 };
@@ -217,7 +217,7 @@ std::unordered_map<std::string, GLint> shader::uniforms()
   return r;
 }
 
-std::unordered_map<std::string, GLint> shader::attributes()
+std::unordered_map<std::string, GLint> shader_core::attributes()
 {
   std::unordered_map<std::string, GLint> r;
   GLint count { 0 };
