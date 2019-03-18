@@ -4,6 +4,20 @@
 #include "glscene.hpp"
 #include "ui_glscene.h"
 
+inline QDebug operator << (QDebug dbg, const std::unordered_map<std::string, GLint>& v)
+{
+  dbg.nospace() << "unordered_map(";
+  auto delimer { false };
+  for (auto& item : v)
+  {
+    if (delimer) dbg << ", ";
+    dbg << item.first.c_str() << " = " << item.second;
+    delimer = true;
+  }
+  dbg.nospace() << ")";
+  return dbg.maybeSpace();
+}
+
 GLScene::GLScene(QWidget *parent)
   : QOpenGLWidget(parent)
   , ui(new Ui::GLScene)
@@ -15,7 +29,6 @@ GLScene::GLScene(QWidget *parent)
 GLScene::~GLScene()
 {
   makeCurrent();
-  m_vbo.destroy();
   m_program.reset();
   doneCurrent();
 }
@@ -25,6 +38,8 @@ void GLScene::setShader(const QString& source)
   m_program.reset(new shader_core(context()));
   m_program->set_source(0, source);
   m_program->compile();
+  qDebug() << m_program->uniforms();
+  qDebug() << m_program->attributes();
 }
 
 void GLScene::channel_A(GLuint texId, const QSize& size)
@@ -51,10 +66,6 @@ void GLScene::initializeGL()
 {
   initializeOpenGLFunctions();
   emit initializedGL(context());
-  static const GLfloat quad_coords[4][2] = { { -1.0f, -1.0f }, { -1.0f, +1.0f }, { +1.0f, +1.0f }, { +1.0f, -1.0f } };
-  m_vbo.create();
-  m_vbo.bind();
-  m_vbo.allocate(&quad_coords[0][0], sizeof quad_coords);
   setShader(
 #if 0
         "void mainImage(out vec4 fragColor, in vec2 fragCoord)\n"
@@ -206,14 +217,11 @@ void GLScene::initializeGL()
 
 void GLScene::paintGL()
 {
-  m_vbo.bind();
-  glUseProgram(m_program->get());
-  glEnableVertexAttribArray(m_program->vertex());
-  glVertexAttribPointer(m_program->vertex(), 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-  glUniform3f(m_program->iResolution(), size().width(), size().height(), 0.f);
-  glUniform1f(m_program->iTime(), m_startTime.msecsTo(QTime::currentTime()) * 1e-3f);
-  glUniform4f(m_program->iMouse(), m_mousePosition.x(), m_mousePosition.y(), m_mouseClick.x(), m_mouseClick.y());
-  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  m_program->begin();
+  m_program->iResolution(size().width(), size().height(), 0.f);
+  m_program->iTime(m_startTime.msecsTo(QTime::currentTime()) * 1e-3f);
+  m_program->iMouse(m_mousePosition.x(), m_mousePosition.y(), m_mouseClick.x(), m_mouseClick.y());
+  m_program->end();
 }
 
 void GLScene::resizeGL(int width, int height)

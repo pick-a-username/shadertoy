@@ -49,7 +49,6 @@ private:
 private:
   QScopedPointer<Ui::GLScene> ui;
   QScopedPointer<shader_core> m_program;
-  QOpenGLBuffer m_vbo;
   QTime m_startTime;
   QPointF m_mouseClick;
   QPointF m_mousePosition;

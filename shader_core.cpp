@@ -76,16 +76,23 @@ inline const char* from_iChannel3(GLenum target)
 
 shader_core::shader_core(QOpenGLContext* context) : QOpenGLExtraFunctions(context)
 {
+  static const GLfloat quad_coords[4][2] = { { -1.0f, -1.0f }, { -1.0f, +1.0f }, { +1.0f, +1.0f }, { +1.0f, -1.0f } };
   initializeOpenGLFunctions();
+  GLuint bufId;
+  glGenBuffers(1, &bufId);
+  m_buffer = gl_buffer_ptr(bufId, gl_buffer_ptr::deleter_type(this));
+  glBindBuffer(GL_ARRAY_BUFFER, m_buffer.get());
+  glBufferData(GL_ARRAY_BUFFER, sizeof(quad_coords), &quad_coords[0][0], GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 shader_core::~shader_core()
 {
 }
 void shader_core::compile()
 {
-  //static char common_version[] = "#version 100\n";
-  static char common_version[] = "#version 120\n";
-  static char common_precision[] =
+  //static char common_version[] { "#version 100\n" };
+  static char common_version[] { "#version 120\n" };
+  static char common_precision[] {
       "#ifdef GL_ES\n"
       "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
       "precision highp float;\n"
@@ -96,8 +103,8 @@ void shader_core::compile()
       "#define lowp\n"
       "#define mediump\n"
       "#define highp\n"
-      "#endif\n";
-  static const char* vertex_src[] = {
+      "#endif\n" };
+  static const char* vertex_src[] {
     common_version,
     common_precision,
     "attribute highp vec2 vertex;\n"
@@ -137,7 +144,7 @@ void shader_core::compile()
         "uniform float iSampleRate;\n"           // sound sample rate (i.e., 44100)
         "\n"
         );
-  fragment_src.emplace_back(from_iChannel0(m_iChannel_target[0]));         // input channel. XX = 2D/Cube
+  fragment_src.emplace_back(from_iChannel0(m_iChannel_target[0])); // input channel. XX = 2D/Cube
   fragment_src.emplace_back(from_iChannel1(m_iChannel_target[1]));
   fragment_src.emplace_back(from_iChannel2(m_iChannel_target[2]));
   fragment_src.emplace_back(from_iChannel3(m_iChannel_target[3]));
@@ -173,7 +180,7 @@ void shader_core::compile()
     glGetProgramiv(m_program.get(), GL_LINK_STATUS, &success);
     if (success == GL_FALSE)
     {
-      GLint maxLength = 0;
+      GLint maxLength { 0 };
       glGetProgramiv(m_program.get(), GL_INFO_LOG_LENGTH, &maxLength);
       m_program_error_log.resize(maxLength);
       glGetProgramInfoLog(m_program.get(), maxLength, &maxLength, &m_program_error_log[0]);
@@ -198,39 +205,37 @@ void shader_core::compile()
   m_iDate_location = glGetUniformLocation(m_program.get(), "iDate");
   m_iSampleRate_location = glGetUniformLocation(m_program.get(), "iSampleRate");
 }
-
 std::unordered_map<std::string, GLint> shader_core::uniforms()
 {
   std::unordered_map<std::string, GLint> r;
-  GLint count { 0 };
-  glGetProgramInterfaceiv(m_program.get(), GL_UNIFORM, GL_ACTIVE_RESOURCES, &count);
-  GLenum properties[] = { GL_NAME_LENGTH, GL_LOCATION };
-  for (GLint i { 0 }; i < count; ++i)
+  GLuint count { 0 };
+  glGetProgramInterfaceiv(m_program.get(), GL_UNIFORM, GL_ACTIVE_RESOURCES, reinterpret_cast<GLint*>(&count));
+  GLenum properties[] { GL_NAME_LENGTH, GL_LOCATION };
+  for (GLuint i { 0 }; i < count; ++i)
   {
    GLint results[2];
-   glGetProgramResourceiv(m_program.get(), GL_UNIFORM, i, 2, properties, 2, NULL, results);
+   glGetProgramResourceiv(m_program.get(), GL_UNIFORM, i, 2, properties, 2, nullptr, results);
    std::string name;
    name.resize(results[0] + 1, ' ');
-   glGetProgramResourceName(m_program.get(), GL_UNIFORM, i, name.size(), NULL, &name[0]);
-   r.emplace(name, results[1]);
+   glGetProgramResourceName(m_program.get(), GL_UNIFORM, i, name.size(), nullptr, &name[0]);
+   r.emplace(std::move(name), results[1]);
   }
   return r;
 }
-
 std::unordered_map<std::string, GLint> shader_core::attributes()
 {
   std::unordered_map<std::string, GLint> r;
-  GLint count { 0 };
-  glGetProgramInterfaceiv(m_program.get(), GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, &count);
-  GLenum properties[] = { GL_NAME_LENGTH, GL_LOCATION};
-  for (GLint i { 0 }; i < count; ++i)
+  GLuint count { 0 };
+  glGetProgramInterfaceiv(m_program.get(), GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, reinterpret_cast<GLint*>(&count));
+  GLenum properties[] { GL_NAME_LENGTH, GL_LOCATION};
+  for (GLuint i { 0 }; i < count; ++i)
   {
    GLint results[2];
-   glGetProgramResourceiv(m_program.get(), GL_PROGRAM_INPUT, i, 2, properties, 2, NULL, results);
+   glGetProgramResourceiv(m_program.get(), GL_PROGRAM_INPUT, i, 2, properties, 2, nullptr, results);
    std::string name;
    name.resize(results[0] + 1, ' ');
-   glGetProgramResourceName(m_program.get(), GL_PROGRAM_INPUT, i, name.size(), NULL, &name[0]);
-   r.emplace(name, results[1]);
+   glGetProgramResourceName(m_program.get(), GL_PROGRAM_INPUT, i, name.size(), nullptr, &name[0]);
+   r.emplace(std::move(name), results[1]);
   }
   return r;
 }
