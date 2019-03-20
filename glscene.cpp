@@ -4,9 +4,9 @@
 #include "glscene.hpp"
 #include "ui_glscene.h"
 
-inline QDebug operator << (QDebug dbg, const std::unordered_map<std::string, GLint>& v)
+inline QDebug operator << (QDebug dbg, const shadertoy::id_map& v)
 {
-  dbg.nospace() << "unordered_map(";
+  dbg.nospace() << "shader_core::id_map(";
   auto delimer { false };
   for (auto& item : v)
   {
@@ -35,8 +35,62 @@ GLScene::~GLScene()
 
 void GLScene::setShader(const QString& source)
 {
-  m_program.reset(new shader_core(context()));
-  m_program->set_source(0, source);
+  m_program.reset(new shadertoy::core(context()));
+  m_program->set_source(0,
+                        "struct shape_sdf { float dist; vec3 color; };\n"
+                        "\n"
+                        "\n"
+                        "float circle_sdf(vec3 p, vec3 pos, float size)\n"
+                        "{\n"
+                        "    return length(p - pos) - size;\n"
+                        "}\n"
+                        "\n"
+                        "float box_sdf(vec3 p, vec3 pos, float size)\n"
+                        "{\n"
+                        "    p = abs(p - pos);\n"
+                        "    return max(p.x, max(p.y, p.z)) - size * .5;\n"
+                        "}\n"
+                        "\n"
+                        "float surface_sdf(vec3 p, vec3 orientation, float dist)\n"
+                        "{\n"
+                        "    return dot(p, orientation) - dist;\n"
+                        "}\n"
+                        "\n"
+                        "shape_sdf intersect_sdf(shape_sdf A, shape_sdf B) { if (A.dist > B.dist) return A; return B; }\n"
+                        "shape_sdf union_sdf(shape_sdf A, shape_sdf B) { if (A.dist < B.dist) return A; return B; }\n"
+                        "shape_sdf difference_sdf(shape_sdf A, shape_sdf B) { B.dist = - B.dist; return intersect_sdf(A, B); }\n"
+                        "\n"
+                        "vec3 Stereo(vec2 res, vec2 p)\n"
+                        "{\n"
+                        "    vec3 uv;\n"
+                        "    uv.xy = 2. * p / res - vec2(1.);\n"
+                        "    res.x *= .5;\n"
+                        "    res /= res.x;\n"
+                        "    if (uv.x < 0.)\n"
+                        "    {\n"
+                        "        uv.x += 1.;\n"
+                        "        uv.z = 1.;\n"
+                        "    }\n"
+                        "    else\n"
+                        "    {\n"
+                        "        uv.z = -1.;\n"
+                        "    }\n"
+                        "    uv.x = uv.x * 2. - 1.;\n"
+                        "    uv.xy *= res;\n"
+                        "    return uv;\n"
+                        "}\n"
+                        "\n"
+                        "vec2 fisheye(vec2 uv)\n"
+                        "{\n"
+                        "    float d = length(uv);\n"
+                        "    float r = atan(d, sqrt(1. - d * d)) / 3.14159;\n"
+                        "    float phi = atan(uv.y, uv.x);\n"
+                        "    return 2. * r * vec2(cos(phi), sin(phi));\n"
+                        "}\n"
+                        "\n"
+                        "\n"
+                        );
+  m_program->set_source(1, source);
   m_program->compile();
   qDebug() << m_program->uniforms();
   qDebug() << m_program->attributes();
@@ -67,64 +121,6 @@ void GLScene::initializeGL()
   initializeOpenGLFunctions();
   emit initializedGL(context());
   setShader(
-#if 0
-        "void mainImage(out vec4 fragColor, in vec2 fragCoord)\n"
-        "{\n"
-        "  fragColor = vec4(mod(fragCoord, 20.0) / 20.0, 1.0, 1.0);"
-        "}\n"
-#else
-        "struct shape_sdf { float dist; vec3 color; };\n"
-        "\n"
-        "\n"
-        "float circle_sdf(vec3 p, vec3 pos, float size)\n"
-        "{\n"
-        "    return length(p - pos) - size;\n"
-        "}\n"
-        "\n"
-        "float box_sdf(vec3 p, vec3 pos, float size)\n"
-        "{\n"
-        "    p = abs(p - pos);\n"
-        "    return max(p.x, max(p.y, p.z)) - size * .5;\n"
-        "}\n"
-        "\n"
-        "float surface_sdf(vec3 p, vec3 orientation, float dist)\n"
-        "{\n"
-        "    return dot(p, orientation) - dist;\n"
-        "}\n"
-        "\n"
-        "shape_sdf intersect_sdf(shape_sdf A, shape_sdf B) { if (A.dist > B.dist) return A; return B; }\n"
-        "shape_sdf union_sdf(shape_sdf A, shape_sdf B) { if (A.dist < B.dist) return A; return B; }\n"
-        "shape_sdf difference_sdf(shape_sdf A, shape_sdf B) { B.dist = - B.dist; return intersect_sdf(A, B); }\n"
-        "\n"
-        "vec3 Stereo(vec2 res, vec2 p)\n"
-        "{\n"
-        "    vec3 uv;\n"
-        "    uv.xy = 2. * p / res - vec2(1.);\n"
-        "    res.x *= .5;\n"
-        "    res /= res.x;\n"
-        "    if (uv.x < 0.)\n"
-        "    {\n"
-        "        uv.x += 1.;\n"
-        "        uv.z = 1.;\n"
-        "    }\n"
-        "    else\n"
-        "    {\n"
-        "        uv.z = -1.;\n"
-        "    }\n"
-        "    uv.x = uv.x * 2. - 1.;\n"
-        "    uv.xy *= res;\n"
-        "    return uv;\n"
-        "}\n"
-        "\n"
-        "vec2 fisheye(vec2 uv)\n"
-        "{\n"
-        "    float d = length(uv);\n"
-        "    float r = atan(d, sqrt(1. - d * d)) / 3.14159;\n"
-        "    float phi = atan(uv.y, uv.x);\n"
-        "    return 2. * r * vec2(cos(phi), sin(phi));\n"
-        "}\n"
-        "\n"
-        "\n"
         "#define MAX_STEPS 100\n"
         "#define MAX_DIST 100.\n"
         "#define SURF_DIST .001\n"
@@ -211,7 +207,6 @@ void GLScene::initializeGL()
         "\n"
         "    fragColor = Scene(ro, normalize(vec3(uv.xy, 1)));\n"
         "}"
-#endif
         );
 }
 

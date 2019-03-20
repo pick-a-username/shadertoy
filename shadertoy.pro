@@ -32,7 +32,7 @@ SOURCES += \
     glscene.cpp \
     renderworker.cpp \
     abstractchannel.cpp \
-    shader_core.cpp
+    shadertoy_core.cpp
 
 HEADERS += \
     mainform.hpp \
@@ -41,7 +41,7 @@ HEADERS += \
     glscene.hpp \
     renderworker.hpp \
     abstractchannel.hpp \
-    shader_core.hpp
+    shadertoy_core.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

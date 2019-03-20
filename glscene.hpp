@@ -8,7 +8,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLFramebufferObject>
 #include <QTime>
-#include "shader_core.hpp"
+#include "shadertoy_core.hpp"
 
 namespace Ui {
   class GLScene;
@@ -48,7 +48,7 @@ private:
 
 private:
   QScopedPointer<Ui::GLScene> ui;
-  QScopedPointer<shader_core> m_program;
+  QScopedPointer<shadertoy::core> m_program;
   QTime m_startTime;
   QPointF m_mouseClick;
   QPointF m_mousePosition;
