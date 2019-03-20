@@ -4,7 +4,7 @@
 #include "glscene.hpp"
 #include "ui_glscene.h"
 
-inline QDebug operator << (QDebug dbg, const shadertoy::id_map& v)
+inline QDebug operator << (QDebug dbg, const shadertoy::id_map_type& v)
 {
   dbg.nospace() << "shader_core::id_map(";
   auto delimer { false };
@@ -29,6 +29,7 @@ GLScene::GLScene(QWidget *parent)
 GLScene::~GLScene()
 {
   makeCurrent();
+  killTimer(m_timer_handle);
   m_program.reset();
   doneCurrent();
 }
@@ -208,6 +209,7 @@ void GLScene::initializeGL()
         "    fragColor = Scene(ro, normalize(vec3(uv.xy, 1)));\n"
         "}"
         );
+  m_timer_handle = startTimer(16);
 }
 
 void GLScene::paintGL()
@@ -236,6 +238,11 @@ void GLScene::mouseMoveEvent(QMouseEvent* event)
 
 void GLScene::mouseReleaseEvent(QMouseEvent* event)
 {
+}
+
+void GLScene::timerEvent(QTimerEvent *event)
+{
+  repaint();
 }
 
 void GLScene::dump_glerror(int line)

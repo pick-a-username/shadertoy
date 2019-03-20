@@ -76,6 +76,10 @@ inline const char* from_iChannel3(GLenum target)
 
 namespace shadertoy
 {
+  log_type::log_type(const char* log)
+  {
+    ;
+  }
   core::core(QOpenGLContext* context) : QOpenGLExtraFunctions(context)
   {
     static const GLfloat quad_coords[4][2] = { { -1.0f, -1.0f }, { -1.0f, +1.0f }, { +1.0f, +1.0f }, { +1.0f, -1.0f } };
@@ -124,14 +128,16 @@ namespace shadertoy
       {
         GLint logSize { 0 };
         glGetShaderiv(vertex_shader.get(), GL_INFO_LOG_LENGTH, &logSize);
-        m_fragment_error_log.resize(logSize);
-        glGetShaderInfoLog(vertex_shader.get(), logSize, &logSize, &m_fragment_error_log[0]);
-        qDebug() << __LINE__ << m_fragment_error_log.data();
+        std::vector<GLchar> log(logSize);
+        glGetShaderInfoLog(vertex_shader.get(), logSize, &logSize, &log[0]);
+        m_vertex_log = std::make_unique<log_type>(log.data());
+        qDebug() << "Vertex shader compile error:\n" << log.data();
         return false;
       }
     }
 
     std::vector<const char*> fragment_src;
+    fragment_src.reserve(2 + 1 + 4 + m_sources.size() + 1);
     fragment_src.emplace_back(common_version);
     fragment_src.emplace_back(common_precision);
     fragment_src.emplace_back(
@@ -165,9 +171,10 @@ namespace shadertoy
       {
         GLint logSize { 0 };
         glGetShaderiv(fragment_shader.get(), GL_INFO_LOG_LENGTH, &logSize);
-        m_fragment_error_log.resize(logSize);
-        glGetShaderInfoLog(fragment_shader.get(), logSize, &logSize, &m_fragment_error_log[0]);
-        qDebug() << __LINE__ << m_fragment_error_log.data();
+        std::vector<GLchar> log(logSize);
+        glGetShaderInfoLog(fragment_shader.get(), logSize, &logSize, &log[0]);
+        m_fragment_log = std::make_unique<log_type>(log.data());
+        qDebug() << "Fragment shader compile error:\n" << log.data();
         return false;
       }
     }
@@ -182,11 +189,12 @@ namespace shadertoy
       glGetProgramiv(m_program.get(), GL_LINK_STATUS, &success);
       if (success == GL_FALSE)
       {
-        GLint maxLength { 0 };
-        glGetProgramiv(m_program.get(), GL_INFO_LOG_LENGTH, &maxLength);
-        m_program_error_log.resize(maxLength);
-        glGetProgramInfoLog(m_program.get(), maxLength, &maxLength, &m_program_error_log[0]);
-        qDebug() << __LINE__ << m_program_error_log.data();
+        GLint logSize { 0 };
+        glGetProgramiv(m_program.get(), GL_INFO_LOG_LENGTH, &logSize);
+        std::vector<GLchar> log(logSize);
+        glGetProgramInfoLog(m_program.get(), logSize, &logSize, &log[0]);
+        m_program_log = std::make_unique<log_type>(log.data());
+        qDebug() << "Program link error:\n" << log.data();
         glDetachShader(m_program.get(), vertex_shader.get());
         glDetachShader(m_program.get(), fragment_shader.get());
         m_program = nullptr;
@@ -209,9 +217,9 @@ namespace shadertoy
     m_iSampleRate_location = glGetUniformLocation(m_program.get(), "iSampleRate");
     return true;
   }
-  id_map core::uniforms()
+  id_map_type core::uniforms()
   {
-    id_map r;
+    id_map_type r;
     GLuint count { 0 };
     glGetProgramInterfaceiv(m_program.get(), GL_UNIFORM, GL_ACTIVE_RESOURCES, reinterpret_cast<GLint*>(&count));
     GLenum properties[] { GL_NAME_LENGTH, GL_LOCATION };
@@ -226,9 +234,9 @@ namespace shadertoy
     }
     return r;
   }
-  id_map core::attributes()
+  id_map_type core::attributes()
   {
-    id_map r;
+    id_map_type r;
     GLuint count { 0 };
     glGetProgramInterfaceiv(m_program.get(), GL_PROGRAM_INPUT, GL_ACTIVE_RESOURCES, reinterpret_cast<GLint*>(&count));
     GLenum properties[] { GL_NAME_LENGTH, GL_LOCATION};

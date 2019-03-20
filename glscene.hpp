@@ -42,6 +42,7 @@ protected:
   void mousePressEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
+  void timerEvent(QTimerEvent *event) override;
 
 private:
   void dump_glerror(int line);
@@ -49,6 +50,7 @@ private:
 private:
   QScopedPointer<Ui::GLScene> ui;
   QScopedPointer<shadertoy::core> m_program;
+  int m_timer_handle { -1 };
   QTime m_startTime;
   QPointF m_mouseClick;
   QPointF m_mousePosition;

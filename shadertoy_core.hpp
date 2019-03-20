@@ -8,13 +8,20 @@
 
 namespace shadertoy
 {
-  struct id_map : std::unordered_map<std::string, GLint> { };
+  typedef std::unordered_map<std::string, GLint> id_map_type;
   struct line_status
   {
     enum { UNKNOWN, ERROR, WARNING } type { UNKNOWN };
     uint32_t line;
     uint32_t column;
     std::string description;
+  };
+  struct log_type : std::map<int, std::vector<line_status>>
+  {
+    log_type() = delete;
+    log_type(const log_type&) = delete;
+    log_type(log_type&&) = delete;
+    log_type(const char* log);
   };
   class core : public QOpenGLExtraFunctions
   {
@@ -82,8 +89,8 @@ namespace shadertoy
         i[0] = i[1] = i[2] = .0f;
       glUseProgram(0);
     }
-    id_map uniforms();
-    id_map attributes();
+    id_map_type uniforms();
+    id_map_type attributes();
 
   private:
     struct gl_program_deleter
@@ -153,9 +160,9 @@ namespace shadertoy
     using gl_buffer_ptr = std::unique_ptr<GLuint, gl_buffer_deleter>;
 
   private:
-    std::vector<GLchar> m_fragment_error_log;
-    std::vector<GLchar> m_vertex_error_log;
-    std::vector<GLchar> m_program_error_log;
+    std::unique_ptr<log_type> m_fragment_log;
+    std::unique_ptr<log_type> m_vertex_log;
+    std::unique_ptr<log_type> m_program_log;
     std::map<GLuint, std::string> m_sources;
     std::array<GLenum, 4> m_iChannel_target { GL_NONE, GL_NONE, GL_NONE, GL_NONE };
     std::array<GLfloat, 4> m_iChannelTime { .0f, .0f, .0f, .0f };
