@@ -1,4 +1,6 @@
 #include <QDebug>
+#include <cstdlib>
+#include <cstring>
 #include "shadertoy_core.hpp"
 
 inline const char* from_iChannel0(GLenum target)
@@ -78,7 +80,55 @@ namespace shadertoy
 {
   log_type::log_type(const char* log)
   {
-    ;
+    auto ptr { log };
+    while (ptr != nullptr)
+    {
+      char* ptr_end { nullptr };
+      auto source_id { std::strtoul(ptr, &ptr_end, 0) };
+      ptr = std::strchr(ptr_end, ':');
+      if (ptr == nullptr)
+        return;
+      ++ ptr;
+      line_description description;
+      description.line = std::strtoul(ptr, &ptr_end, 0);
+      ptr = std::strchr(ptr_end, '(');
+      if (ptr == nullptr)
+        return;
+      ++ ptr;
+      description.column = std::strtoul(ptr, &ptr_end, 0);
+      ptr = std::strchr(ptr_end, ':');
+      if (ptr == nullptr)
+        return;
+      ++ ptr;
+      auto source_type_end { std::strchr(ptr, ':') };
+      auto source_type_size { source_type_end - ptr };
+      if (true
+          && source_type_size == sizeof("error")
+          && std::string(ptr, source_type_size) == " error")
+        description.type = line_description::ERROR;
+      else if (true
+               && source_type_size == sizeof("warning")
+               && std::string(ptr, source_type_size) == " warning")
+        description.type = line_description::WARNING;
+      else
+        return;
+      ptr = std::strchr(source_type_end, ' ');
+      if (ptr == nullptr)
+        return;
+      ++ ptr;
+      auto source_text_end { std::strchr(ptr, '\n') };
+      if (source_text_end == nullptr)
+      {
+        description.text = std::string(ptr);
+        ptr = source_text_end;
+      }
+      else
+      {
+        description.text = std::string(ptr, source_text_end);
+        ptr = source_text_end + 1;
+      }
+      operator[](source_id).operator[](description.line).emplace_back(description);
+    }
   }
   core::core(QOpenGLContext* context) : QOpenGLExtraFunctions(context)
   {

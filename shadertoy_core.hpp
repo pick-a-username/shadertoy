@@ -9,14 +9,14 @@
 namespace shadertoy
 {
   typedef std::unordered_map<std::string, GLint> id_map_type;
-  struct line_status
+  struct line_description
   {
     enum { UNKNOWN, ERROR, WARNING } type { UNKNOWN };
-    uint32_t line;
-    uint32_t column;
-    std::string description;
+    uint64_t line;
+    uint64_t column;
+    std::string text;
   };
-  struct log_type : std::map<int, std::vector<line_status>>
+  struct log_type : std::map<uint64_t, std::map<uint64_t, std::vector<line_description>>>
   {
     log_type() = delete;
     log_type(const log_type&) = delete;
@@ -91,6 +91,9 @@ namespace shadertoy
     }
     id_map_type uniforms();
     id_map_type attributes();
+    inline log_type* fragment_log() const { return m_fragment_log.get(); }
+    inline log_type* vertex_log() const { return m_vertex_log.get(); }
+    inline log_type* program_log() const { return m_program_log.get(); }
 
   private:
     struct gl_program_deleter

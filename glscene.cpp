@@ -18,6 +18,30 @@ inline QDebug operator << (QDebug dbg, const shadertoy::id_map_type& v)
   return dbg.maybeSpace();
 }
 
+inline QDebug operator << (QDebug dbg, const shadertoy::log_type* log)
+{
+  if (log == nullptr)
+  {
+    dbg << "no log";
+  }
+  else
+  {
+    for (auto& source : *log)
+    {
+      dbg.nospace() << "Souuce " << source.first << '\n';
+      for (auto& line : source.second)
+      {
+        for (auto& column: line.second)
+        {
+          dbg << column.line << ':' << column.column << "\t\"" << column.text.c_str() << "\"\n";
+        }
+        dbg << '\n';
+      }
+    }
+  }
+  return dbg.maybeSpace();
+}
+
 GLScene::GLScene(QWidget *parent)
   : QOpenGLWidget(parent)
   , ui(new Ui::GLScene)
@@ -95,6 +119,9 @@ void GLScene::setShader(const QString& source)
   m_program->compile();
   qDebug() << m_program->uniforms();
   qDebug() << m_program->attributes();
+  qDebug() << m_program->fragment_log();
+  qDebug() << m_program->vertex_log();
+  qDebug() << m_program->program_log();
 }
 
 void GLScene::channel_A(GLuint texId, const QSize& size)

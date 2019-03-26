@@ -23,24 +23,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 CONFIG += c++14
+YAML_CPP_PATH = $$(HOME)/lib/yaml-cpp
+INCLUDEPATH += $$YAML_CPP_PATH/include
+LIBS += -L$$YAML_CPP_PATH/lib
+LIBS += -lyaml-cpp
 
 SOURCES += \
         main.cpp \
     mainform.cpp \
-    shadereditor.cpp \
-    channelselector.cpp \
     glscene.cpp \
-    renderworker.cpp \
-    abstractchannel.cpp \
     shadertoy_core.cpp
 
 HEADERS += \
     mainform.hpp \
-    shadereditor.hpp \
-    channelselector.hpp \
     glscene.hpp \
-    renderworker.hpp \
-    abstractchannel.hpp \
     shadertoy_core.hpp
 
 # Default rules for deployment.
@@ -50,6 +46,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 FORMS += \
     mainform.ui \
-    shadereditor.ui \
-    channelselector.ui \
     glscene.ui

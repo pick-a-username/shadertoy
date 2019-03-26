@@ -1,3 +1,4 @@
+#include <yaml-cpp/node/node.h>
 #include "mainform.hpp"
 #include <QApplication>
 
