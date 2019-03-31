@@ -1,0 +1,141 @@
+common: |
+  struct shape_sdf { float dist; vec3 color; };
+
+  float circle_sdf(vec3 p, vec3 pos, float size)
+  {
+      return length(p - pos) - size;
+  }
+
+  float box_sdf(vec3 p, vec3 pos, float size)
+  {
+      p = abs(p - pos);
+      return max(p.x, max(p.y, p.z)) - size * .5;
+  }
+
+  float surface_sdf(vec3 p, vec3 orientation, float dist)
+  {
+      return dot(p, orientation) - dist;
+  }
+
+  shape_sdf intersect_sdf(shape_sdf A, shape_sdf B) { if (A.dist > B.dist) return A; return B; }
+  shape_sdf union_sdf(shape_sdf A, shape_sdf B) { if (A.dist < B.dist) return A; return B; }
+  shape_sdf difference_sdf(shape_sdf A, shape_sdf B) { B.dist = - B.dist; return intersect_sdf(A, B); }
+
+  vec3 Stereo(vec2 res, vec2 p)
+  {
+      vec3 uv;
+      uv.xy = 2. * p / res - vec2(1.);
+      res.x *= .5;
+      res /= res.x;
+      if (uv.x < 0.)
+      {
+          uv.x += 1.;
+          uv.z = 1.;
+      }
+      else
+      {
+          uv.z = -1.;
+      }
+      uv.x = uv.x * 2. - 1.;
+      uv.xy *= res;
+      return uv;
+  }
+
+  vec2 fisheye(vec2 uv)
+  {
+      float d = length(uv);
+      float r = atan(d, sqrt(1. - d * d)) / 3.14159;
+      float phi = atan(uv.y, uv.x);
+      return 2. * r * vec2(cos(phi), sin(phi));
+  }
+
+shaders:
+  main:
+    src: |
+      #define MAX_STEPS 100
+      #define MAX_DIST 100.
+      #define SURF_DIST .001
+
+      shape_sdf get_dist(vec3 p)
+      {
+          shape_sdf cur;
+
+          cur = difference_sdf(
+              shape_sdf(box_sdf(p, vec3(0., 1., 6.), 2.), vec3(1., 0., 0.))
+              ,
+              shape_sdf(circle_sdf(p, vec3(0., 1., 6.),  1.3), vec3(0., 1., 0.))
+          );
+
+          cur = union_sdf(
+              cur,
+              shape_sdf(surface_sdf(p, vec3(0., 1., 0.), - 1.), vec3(0., 0., 1.))
+          );
+
+          return cur;
+      }
+
+      shape_sdf ray_march(vec3 ro, vec3 rd)
+      {
+          float dist = 0.;
+          shape_sdf dO;
+
+          for (int i = 0; i < MAX_STEPS; ++i)
+          {
+              dO = get_dist(ro + rd * dist);
+              dist += dO.dist;
+              if (dO.dist < SURF_DIST)
+                  break;
+              if (dist > MAX_DIST)
+              {
+                  dO.color = vec3(1.);
+                  break;
+              }
+          }
+          dO.dist = dist;
+          return dO;
+      }
+
+      vec3 get_normal(vec3 p)
+      {
+          vec2 e = vec2(SURF_DIST, 0.);
+          return normalize(get_dist(p).dist - vec3(get_dist(p-e.xyy).dist, get_dist(p-e.yxy).dist, get_dist(p-e.yyx).dist));
+      }
+
+      float get_light(vec3 p, vec3 lightPos)
+      {
+          vec3 l = normalize(lightPos - p);
+          vec3 n = get_normal(p);
+          float d = ray_march(p + n * SURF_DIST * 2., l).dist;
+          float dif = clamp(dot(n, l), 0., 1.);
+          if (d < length(lightPos - p)) dif *= .1;
+          return dif;
+      }
+
+      vec4 Scene(vec3 ro, vec3 rd)
+      {
+          shape_sdf d = ray_march(ro, rd);
+          vec3 p = ro + rd * d.dist;
+      #if 1
+          float dif = get_light(p, vec3(0., 5., 6.) + 5. * vec3(sin(iTime), 0., cos(iTime)));
+          return vec4(d.color * dif, 1.);
+      #else
+          return vec4(d.color, 1.);
+      #endif
+      }
+
+      #define EYE .4
+      void mainImage(out vec4 fragColor, in vec2 fragCoord)
+      {
+          vec3 ro = vec3(0., 1., 0.);
+          vec3 uv = Stereo(iResolution.xy, fragCoord.xy);
+
+          uv.xy = fisheye(uv.xy);
+
+          ro.x = uv.z * EYE;
+          ro.y += .5 * sin(.25 * iTime);
+
+          uv.xy *= 1. + .5 * sin(.125 * iTime);
+
+          fragColor = Scene(ro, normalize(vec3(uv.xy, 1)));
+      }
+
