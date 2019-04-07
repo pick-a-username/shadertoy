@@ -1,28 +1,9 @@
 #include <iostream>
-#include <yaml-cpp/yaml.h>
 #include "mainform.hpp"
 #include <QFileDialog>
 #include <QApplication>
 
-struct shadertoy_config
-{
-  std::string common;
-};
-
-namespace YAML
-{
-  template<>
-  struct convert<shadertoy_config>
-  {
-    static bool decode(const Node& node, shadertoy_config& config)
-    {
-      if(!node.IsMap())
-        return false;
-      config.common = node["common"].as<std::string>();
-      return true;
-    }
-  };
-}
+#include "shadertoy_yaml.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -34,17 +15,14 @@ int main(int argc, char *argv[])
           nullptr,
           "Select yaml file",
           QDir::current().path(),
-          ("Project (*.yaml *.yml)")
-          ).toStdString();
+          "Project (*.yaml *.yml)").toStdString();
   }
   else
   {
     yaml_config = argv[1];
   }
-  auto config { YAML::LoadFile(yaml_config).as<shadertoy_config>() };
-  std::cout << "===\n" << config.common << "\n=====\n";
-  //MainForm w;
-  //w.show();
-  //return a.exec();
-  return 0;
+  auto&& config { YAML::LoadFile(yaml_config).as<shadertoy::config_t>() };
+  MainForm w { std::move(config) };
+  w.show();
+  return a.exec();
 }

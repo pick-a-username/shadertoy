@@ -1,53 +1,54 @@
-common: |
-  struct shape_sdf { float dist; vec3 color; };
+common:
+  src: |
+    struct shape_sdf { float dist; vec3 color; };
 
-  float circle_sdf(vec3 p, vec3 pos, float size)
-  {
-      return length(p - pos) - size;
-  }
+    float circle_sdf(vec3 p, vec3 pos, float size)
+    {
+        return length(p - pos) - size;
+    }
 
-  float box_sdf(vec3 p, vec3 pos, float size)
-  {
-      p = abs(p - pos);
-      return max(p.x, max(p.y, p.z)) - size * .5;
-  }
+    float box_sdf(vec3 p, vec3 pos, float size)
+    {
+        p = abs(p - pos);
+        return max(p.x, max(p.y, p.z)) - size * .5;
+    }
 
-  float surface_sdf(vec3 p, vec3 orientation, float dist)
-  {
-      return dot(p, orientation) - dist;
-  }
+    float surface_sdf(vec3 p, vec3 orientation, float dist)
+    {
+        return dot(p, orientation) - dist;
+    }
 
-  shape_sdf intersect_sdf(shape_sdf A, shape_sdf B) { if (A.dist > B.dist) return A; return B; }
-  shape_sdf union_sdf(shape_sdf A, shape_sdf B) { if (A.dist < B.dist) return A; return B; }
-  shape_sdf difference_sdf(shape_sdf A, shape_sdf B) { B.dist = - B.dist; return intersect_sdf(A, B); }
+    shape_sdf intersect_sdf(shape_sdf A, shape_sdf B) { if (A.dist > B.dist) return A; return B; }
+    shape_sdf union_sdf(shape_sdf A, shape_sdf B) { if (A.dist < B.dist) return A; return B; }
+    shape_sdf difference_sdf(shape_sdf A, shape_sdf B) { B.dist = - B.dist; return intersect_sdf(A, B); }
 
-  vec3 Stereo(vec2 res, vec2 p)
-  {
-      vec3 uv;
-      uv.xy = 2. * p / res - vec2(1.);
-      res.x *= .5;
-      res /= res.x;
-      if (uv.x < 0.)
-      {
-          uv.x += 1.;
-          uv.z = 1.;
-      }
-      else
-      {
-          uv.z = -1.;
-      }
-      uv.x = uv.x * 2. - 1.;
-      uv.xy *= res;
-      return uv;
-  }
+    vec3 Stereo(vec2 res, vec2 p)
+    {
+        vec3 uv;
+        uv.xy = 2. * p / res - vec2(1.);
+        res.x *= .5;
+        res /= res.x;
+        if (uv.x < 0.)
+        {
+            uv.x += 1.;
+            uv.z = 1.;
+        }
+        else
+        {
+            uv.z = -1.;
+        }
+        uv.x = uv.x * 2. - 1.;
+        uv.xy *= res;
+        return uv;
+    }
 
-  vec2 fisheye(vec2 uv)
-  {
-      float d = length(uv);
-      float r = atan(d, sqrt(1. - d * d)) / 3.14159;
-      float phi = atan(uv.y, uv.x);
-      return 2. * r * vec2(cos(phi), sin(phi));
-  }
+    vec2 fisheye(vec2 uv)
+    {
+        float d = length(uv);
+        float r = atan(d, sqrt(1. - d * d)) / 3.14159;
+        float phi = atan(uv.y, uv.x);
+        return 2. * r * vec2(cos(phi), sin(phi));
+    }
 
 shaders:
   main:

@@ -37,7 +37,9 @@ SOURCES += \
 HEADERS += \
     mainform.hpp \
     glscene.hpp \
-    shadertoy_core.hpp
+    shadertoy_core.hpp \
+    shadertoy_config.hpp \
+    shadertoy_yaml.hpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
